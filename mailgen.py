@@ -20,6 +20,7 @@ BANNER = """
 # Default values
 NUMBER_OF_MAILS = 100
 OUTPUT_PATH = Path("emails.txt")
+HOSTS_PATH = Path("hosts.txt")
 
 
 def load_from_web(urls: list[str]) -> Iterator[str]:
@@ -42,8 +43,8 @@ def load_from_files(files: list[Path]) -> Iterator[str]:
             yield from f.readlines()
 
 
-def load_hosts(file_path):
-    with open(file_path, "r") as file:
+def load_hosts(file_path: Path) -> list[str]:
+    with file_path.open("r") as file:
         return [line.strip() for line in file.readlines()]
 
 
@@ -91,6 +92,7 @@ def main():
     parser.add_argument(
         "-o", "--output", type=Path, help="Output file path", default=OUTPUT_PATH
     )
+    parser.add_argument("--hosts", type=Path, help="path to hosts file", default=HOSTS_PATH)
 
     # Command-line argument parsing
     args = parser.parse_args()
@@ -107,7 +109,7 @@ def main():
             ]
         )
     )  # Update with actual path
-    hosts = load_hosts("hosts.txt")  # Update the path to the correct location
+    hosts = load_hosts(args.hosts)  # Update the path to the correct location
 
     first_names: list[str] = list(load_from_web(first_name_files))
     emails = generate_emails(first_names, last_names, hosts, args.number)
