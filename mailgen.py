@@ -1,7 +1,7 @@
 import random
 from requests import Session
 from requests.exceptions import RequestException
-from typing import Iterator
+from typing import Iterator, Iterable
 from pathlib import Path
 from argparse import ArgumentParser
 
