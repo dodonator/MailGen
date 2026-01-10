@@ -1,9 +1,9 @@
-import sys
 import random
 from requests import Session
 from requests.exceptions import RequestException
 from typing import Iterator
 from pathlib import Path
+from argparse import ArgumentParser
 
 # Banner Information
 BANNER = """
@@ -16,14 +16,17 @@ BANNER = """
 │ Version: 0.5 │ Github: @fernstedt | Created by math0x │
 └───────────────────────────────────────────────────────┘
 """
-print(BANNER)  # Print the banner at the start
+
+# Default values
+NUMBER_OF_MAILS = 100
+OUTPUT_PATH = Path("emails.txt")
 
 
 def load_from_web(urls: list[str]) -> Iterator[str]:
     url: str
     session: Session = Session()
     for url in urls:
-        names: list[str] = []
+        names: list[str]
         try:
             response = session.get(url)
         except RequestException:
@@ -58,43 +61,33 @@ def generate_emails(first_names, last_names, hosts, num_emails):
     return emails
 
 
-def save_emails(emails, output_file):
-    with open(output_file, "w") as file:
+def save_emails(emails: Iterable[str], output_file: str | Path):
+    if isinstance(output_file, str):
+        output_file = Path(output_file)
+    with output_file.open("w", encoding="utf-8") as file:
         for email in emails:
-            file.write(email + "\n")
-
-
-def print_help():
-    help_text = """
-Usage: python mailgen.py [options]
-
-Options:
-  -h            Show this help message and exit
-  -n <number>   Specify the number of emails to create (default: 100)
-  -o <file>     Specify the output file name (default: emails.txt)
-
-Example:
-  python mailgen.py -n 50 -o my_emails.txt
-"""
-    print(help_text)
+            file.write(f"{email}\n")
 
 
 def main():
-    # Default values
-    num_emails = 100
-    output_file = "emails.txt"
+    print(BANNER)  # Print the banner at the start
+
+    parser: ArgumentParser = ArgumentParser(
+        "mailGen", description="Generate random mail addresses"
+    )
+    parser.add_argument(
+        "-n",
+        "--number",
+        type=int,
+        help="Number of emails to create",
+        default=NUMBER_OF_MAILS,
+    )
+    parser.add_argument(
+        "-o", "--output", type=Path, help="Output file path", default=OUTPUT_PATH
+    )
 
     # Command-line argument parsing
-    args = sys.argv[1:]
-    for i in range(len(args)):
-        if args[i] == "-h":
-            print_help()
-            return
-        elif args[i] == "-n" and i + 1 < len(args):
-            num_emails = int(args[i + 1])
-        elif args[i] == "-o" and i + 1 < len(args):
-            output_file = args[i + 1]
-
+    args = parser.parse_args()
     first_name_files: list[str] = [
         "https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/femalenames-usa-top1000.txt",
         "https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/forenames-india-top1000.txt",
@@ -111,8 +104,8 @@ def main():
     hosts = load_hosts("hosts.txt")  # Update the path to the correct location
 
     first_names: list[str] = list(load_from_web(first_name_files))
-    emails = generate_emails(first_names, last_names, hosts, num_emails)
-    save_emails(emails, output_file)
+    emails = generate_emails(first_names, last_names, hosts, args.number)
+    save_emails(emails, args.output)
 
 
 if __name__ == "__main__":
