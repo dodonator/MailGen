@@ -46,6 +46,7 @@ def load_hosts(file_path):
     with open(file_path, "r") as file:
         return [line.strip() for line in file.readlines()]
 
+
 def address_variation(first_name: str, last_name: str, host: str) -> Iterator[str]:
     yield f"{first_name}.{last_name}@{host}"
     yield f"{first_name}-{last_name}@{host}"
