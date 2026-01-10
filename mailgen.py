@@ -1,3 +1,9 @@
+import sys
+import random
+import requests  # Add this import
+from requests import Session
+from typing import Iterator
+from pathlib import Path
 # mailgen.py
 
 # Banner Information
@@ -13,20 +19,25 @@ BANNER = """
 """
 print(BANNER)  # Print the banner at the start
 
-import sys
-import random
-import requests  # Add this import
 
-def load_names(file_paths):
-    names = []
-    for file_path in file_paths:
-        if file_path.startswith('http'):
-            response = requests.get(file_path)  # Fetch the content from the URL
-            names = response.text.splitlines()  # Split the content into lines
-        else:
-            with open(file_path, 'r') as file:
-                names = file.readlines()  # Read from the file
-    return names
+def load_from_web(urls: list[str]) -> Iterator[str]:
+    url: str
+    session: Session = requests.Session()
+    for url in urls:
+        names: list[str] = []
+        try:
+            response = session.get(url)
+        except requests.exceptions.RequestException:
+            continue
+        names = response.text.splitlines()
+        yield from names
+
+def load_from_files(files: list[Path]) -> Iterator[str]:
+    file: Path
+    for file in files:
+        with file.open("r", encoding="utf-8") as f:
+            yield from f.readlines()
+
 
 def load_hosts(file_path):
     with open(file_path, 'r') as file:
@@ -80,16 +91,16 @@ def main():
         elif args[i] == '-o' and i + 1 < len(args):
             output_file = args[i + 1]
 
-    first_name_files = [
+    first_name_files: list[str] = [
         'https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/femalenames-usa-top1000.txt',
         'https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/forenames-india-top1000.txt',
         'https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/malenames-usa-top1000.txt',
         'https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/names.txt'
     ]  # Add more paths as needed
-    last_names = load_names(['https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/familynames-usa-top1000.txt'])  # Update with actual path
+    last_names: list[str] = list(load_from_web(['https://raw.githubusercontent.com/fernstedt/SecLists/master/Usernames/Names/familynames-usa-top1000.txt']))  # Update with actual path
     hosts = load_hosts('hosts.txt')  # Update the path to the correct location
 
-    first_names = load_names(first_name_files)
+    first_names: list[str] = list(load_from_web(first_name_files))
     emails = generate_emails(first_names, last_names, hosts, num_emails)
     save_emails(emails, output_file)
 
