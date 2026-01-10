@@ -46,18 +46,23 @@ def load_hosts(file_path):
     with open(file_path, "r") as file:
         return [line.strip() for line in file.readlines()]
 
+def address_variation(first_name: str, last_name: str, host: str) -> Iterator[str]:
+    yield f"{first_name}.{last_name}@{host}"
+    yield f"{first_name}-{last_name}@{host}"
+    yield f"{first_name[0]}{last_name}@{host}"
+    yield f"{first_name}-{last_name[:2]}@{host}"
+
 
 def generate_emails(first_names, last_names, hosts, num_emails):
-    emails = []
-    for _ in range(num_emails):  # Generate specified number of emails
-        first_name = random.choice(first_names).lower()  # Convert to lowercase
-        last_name = random.choice(last_names).lower()  # Convert to lowercase
-        host = random.choice(hosts).lower()  # Convert to lowercase
-
-        # Generate different email formats
-        emails.append(f"{first_name}.{last_name}@{host}")
-        emails.append(f"{first_name}{last_name}@{host}")
-
+    emails: list[str] = []
+    counter: int = 0
+    while counter < num_emails:
+        first_name: str = random.choice(first_names).lower()  # Convert to lowercase
+        last_name: str = random.choice(last_names).lower()  # Convert to lowercase
+        host: str = random.choice(hosts).lower()  # Convert to lowercase
+        email: str = random.choice(list(address_variation(first_name, last_name, host)))
+        emails.append(email)
+        counter += 1
     return emails
 
 
