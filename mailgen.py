@@ -1,7 +1,7 @@
 import sys
 import random
-import requests  # Add this import
 from requests import Session
+from requests.exceptions import RequestException
 from typing import Iterator
 from pathlib import Path
 
@@ -21,12 +21,12 @@ print(BANNER)  # Print the banner at the start
 
 def load_from_web(urls: list[str]) -> Iterator[str]:
     url: str
-    session: Session = requests.Session()
+    session: Session = Session()
     for url in urls:
         names: list[str] = []
         try:
             response = session.get(url)
-        except requests.exceptions.RequestException:
+        except RequestException:
             continue
         names = response.text.splitlines()
         yield from names
